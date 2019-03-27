@@ -2,10 +2,13 @@ from datetime import datetime
 from multiprocessing import Manager
 from threading import Thread
 import time
+import logging
 from concurrent.futures import ProcessPoolExecutor
 from rx.subjects import Subject
 
 from ruuvitag_sensor.ruuvi import RuuviTagSensor, RunFlag
+
+log = logging.getLogger(__name__)
 
 
 def _run_get_data_background(macs, queue, shared_data, bt_device):
@@ -22,7 +25,10 @@ def _run_get_data_background(macs, queue, shared_data, bt_device):
         data[1]['time'] = datetime.utcnow().isoformat()
         queue.put(data)
 
-    RuuviTagSensor.get_datas(add_data, macs, run_flag, bt_device)
+    try:
+        RuuviTagSensor.get_datas(add_data, macs, run_flag, bt_device)
+    except Exception as e:
+        log.error('RuuviTagSensor.get_datas() encountered an exception (%s)', str(e))
 
 
 class RuuviTagReactive(object):
